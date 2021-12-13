@@ -1,8 +1,8 @@
 # This dockerfile can be configured via --build-arg
 # Build context must be the /navigation2 root folder for COPY.
 # Example build command:
-# export UNDERLAY_MIXINS="debug ccache"
-# export OVERLAY_MIXINS="debug ccache coverage-gcc"
+# export UNDERLAY_MIXINS="debug ccache lld"
+# export OVERLAY_MIXINS="debug ccache coverage-gcc lld"
 # docker build -t nav2:latest \
 #   --build-arg UNDERLAY_MIXINS \
 #   --build-arg OVERLAY_MIXINS ./
@@ -51,6 +51,7 @@ RUN apt-get update && \
     apt-get install -y \
       ccache \
       lcov \
+      lld \
       python3-pip \
       ros-$ROS_DISTRO-rmw-fastrtps-cpp \
       ros-$ROS_DISTRO-rmw-connextdds \
@@ -78,7 +79,7 @@ RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
 
 # build underlay source
 COPY --from=cacher $UNDERLAY_WS ./
-ARG UNDERLAY_MIXINS="release ccache"
+ARG UNDERLAY_MIXINS="release ccache lld"
 ARG CCACHE_DIR="$UNDERLAY_WS/.ccache"
 RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
     colcon cache lock && \
@@ -106,7 +107,7 @@ FROM builder AS tester
 
 # build overlay source
 COPY --from=cacher $OVERLAY_WS ./
-ARG OVERLAY_MIXINS="release ccache"
+ARG OVERLAY_MIXINS="release ccache lld"
 ARG CCACHE_DIR="$OVERLAY_WS/.ccache"
 RUN . $UNDERLAY_WS/install/setup.sh && \
     colcon cache lock && \
